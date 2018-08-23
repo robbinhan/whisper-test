@@ -8,27 +8,18 @@ import (
 	"os"
 	"time"
 
-	// "github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/whisper/whisperv6"
+	"github.com/robbinhan/whisper-test/utils"
 )
-
-func exists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
-}
 
 func main() {
 	var priKey *ecdsa.PrivateKey
 	keyFile := "node2.key"
-	if exists(keyFile) {
+	if utils.ExistsFile(keyFile) {
 		priKey, _ = crypto.LoadECDSA(keyFile)
 	} else {
 		priKey, _ = crypto.GenerateKey()
@@ -57,32 +48,35 @@ func main() {
 
 	whisper.Start(&srv)
 
+	// 连接node1
 	id := discover.MustHexID("fdf241bcdd60ad1ab2e53518b43bf585d14f016c273595b65e4daea86151e2f839fa7a99ca1e188ae8d2263c42227b51512a8687da2f686ebf59559500e9dde3")
-
-	// Complete nodes contain UDP and TCP endpoints:
 	n1 := discover.NewNode(id, net.ParseIP("127.0.0.1"), 8000, 8000)
 	srv.AddPeer(n1)
 
+	// 生成消息
+	params, err := generateMessageParams()
+	if err != nil {
+		srv.Logger.Crit("failed generateMessageParams", "err", err)
+	}
+
+	params.TTL = 1
+	msg, err := whisperv6.NewSentMessage(params)
+	if err != nil {
+		srv.Logger.Crit("failed to create new message", "err", err)
+	}
+
+	// 装到信封
+	env, err := msg.Wrap(params)
+	if err != nil {
+		srv.Logger.Crit("failed Wrap", "err", err)
+	}
+
+	// 循环发送消息
 	go func() {
 		for {
 			time.Sleep(time.Second)
 			for _, peer := range srv.Peers() {
 				srv.Logger.Info("print peer info", "id", peer.ID(), "name", peer.String())
-
-				params, err := generateMessageParams()
-				if err != nil {
-					srv.Logger.Crit("failed generateMessageParams", "err", err)
-				}
-
-				params.TTL = 1
-				msg, err := whisperv6.NewSentMessage(params)
-				if err != nil {
-					srv.Logger.Crit("failed to create new message", "err", err)
-				}
-				env, err := msg.Wrap(params)
-				if err != nil {
-					srv.Logger.Crit("failed Wrap", "err", err)
-				}
 
 				err = whisper.SendP2PMessage(peer.ID().Bytes(), env)
 				if err != nil {

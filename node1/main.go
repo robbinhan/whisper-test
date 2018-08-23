@@ -11,16 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/whisper/whisperv6"
+	"github.com/robbinhan/whisper-test/utils"
 )
-
-func exists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
-}
 
 // Node2Encode ...
 const Node2Encode = "50095ad7bd27b0c99e673a90b1f818b408ded5672ac578cf80799333be371c190c02a1c16b92bdd0894c5757c5c4987afe9422dbb22af8b00b41943db066add0"
@@ -28,7 +20,7 @@ const Node2Encode = "50095ad7bd27b0c99e673a90b1f818b408ded5672ac578cf80799333be3
 func main() {
 	var priKey *ecdsa.PrivateKey
 	keyFile := "node1.key"
-	if exists(keyFile) {
+	if utils.ExistsFile(keyFile) {
 		priKey, _ = crypto.LoadECDSA(keyFile)
 	} else {
 		priKey, _ = crypto.GenerateKey()
@@ -38,9 +30,7 @@ func main() {
 	// set the log level to Trace
 	log.Root().SetHandler(log.LvlFilterHandler(log.LvlTrace, log.StreamHandler(os.Stdout, log.TerminalFormat(true))))
 
-	whisperv6Config := whisperv6.DefaultConfig
-	whisperv6Config.MinimumAcceptedPOW = 0
-	whisper := whisperv6.New(&whisperv6Config)
+	whisper := whisperv6.New(&whisperv6.DefaultConfig)
 
 	p2pConfig := &p2p.Config{
 		PrivateKey: priKey,
@@ -57,15 +47,17 @@ func main() {
 
 	log.Info("Node", "info", srv.NodeInfo())
 
+	// 创建consumer对象
 	filter := whisperv6.Filter{
 		AllowP2P: true,
 		PoW:      0,
-		KeySym:   []byte("whisperv6 message test.........."),
+		KeySym:   []byte("whisperv6 message test.........."), // 对称秘钥
 	}
 	whisper.Subscribe(&filter)
 
 	whisper.Start(&srv)
 
+	// 信任node2，才能处理它传来的消息
 	go func() {
 		for {
 			time.Sleep(time.Second)
@@ -86,6 +78,7 @@ func main() {
 		}
 	}()
 
+	// 消费消息
 	go func() {
 		for {
 			time.Sleep(time.Second)
