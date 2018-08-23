@@ -12,7 +12,7 @@ whisper的概念是一端创建消息(msg)，封到信封里(Envelope)，发送�
 - cd node2
 - go run main.go
 
-##node1输出
+## node1输出
 ```bash
 INFO [08-23|18:15:40.958] Starting P2P networking
 INFO [08-23|18:15:40.961] UDP listener up                          self=enode://fdf241bcdd60ad1ab2e53518b43bf585d14f016c273595b65e4daea86151e2f839fa7a99ca1e188ae8d2263c42227b51512a8687da2f686ebf59559500e9dde3@[::]:8000
@@ -65,7 +65,7 @@ INFO [08-23|18:15:52.999] recvd msg                                payload="This
 ```
 
 
-##node2输出
+## node2输出
 ```bash
 INFO [08-23|18:19:22.341] Starting P2P networking
 INFO [08-23|18:19:22.344] UDP listener up                          self=enode://50095ad7bd27b0c99e673a90b1f818b408ded5672ac578cf80799333be371c190c02a1c16b92bdd0894c5757c5c4987afe9422dbb22af8b00b41943db066add0@[::]:8001
