@@ -18,6 +18,9 @@ import (
 const Node2Encode = "50095ad7bd27b0c99e673a90b1f818b408ded5672ac578cf80799333be371c190c02a1c16b92bdd0894c5757c5c4987afe9422dbb22af8b00b41943db066add0"
 
 func main() {
+	// set the log level to Trace
+	log.Root().SetHandler(log.LvlFilterHandler(log.LvlTrace, log.StreamHandler(os.Stdout, log.TerminalFormat(true))))
+
 	var priKey *ecdsa.PrivateKey
 	keyFile := "node1.key"
 	if utils.ExistsFile(keyFile) {
@@ -26,9 +29,6 @@ func main() {
 		priKey, _ = crypto.GenerateKey()
 		crypto.SaveECDSA(keyFile, priKey)
 	}
-
-	// set the log level to Trace
-	log.Root().SetHandler(log.LvlFilterHandler(log.LvlTrace, log.StreamHandler(os.Stdout, log.TerminalFormat(true))))
 
 	whisper := whisperv6.New(&whisperv6.DefaultConfig)
 

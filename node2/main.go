@@ -49,8 +49,9 @@ func main() {
 	whisper.Start(&srv)
 
 	// 连接node1
-	id := discover.MustHexID("fdf241bcdd60ad1ab2e53518b43bf585d14f016c273595b65e4daea86151e2f839fa7a99ca1e188ae8d2263c42227b51512a8687da2f686ebf59559500e9dde3")
-	n1 := discover.NewNode(id, net.ParseIP("127.0.0.1"), 8000, 8000)
+	priKeyNode2, _ := crypto.LoadECDSA("../node1/node1.key")
+	log.Info("node1", "encode", discover.PubkeyID(&priKeyNode2.PublicKey))
+	n1 := discover.NewNode(discover.PubkeyID(&priKeyNode2.PublicKey), net.ParseIP("127.0.0.1"), 8000, 8000)
 	srv.AddPeer(n1)
 
 	// 生成消息
